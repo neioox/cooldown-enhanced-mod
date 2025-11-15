@@ -7,7 +7,6 @@ public class SettingOptions {
         BAR
     }
 
-
     public enum CooldownNumericMode {
         DECIMAL,
         PERCENTAGE

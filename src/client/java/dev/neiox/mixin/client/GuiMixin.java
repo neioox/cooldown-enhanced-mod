@@ -61,7 +61,10 @@ public class GuiMixin {
         }else{
             if(wasOnCooldown){
                 renderCooldownNumericMode(guiGraphics, minecraft, "100%");
-                player.playSound(SoundEvents.NOTE_BLOCK_BASS.value(), 0.5F, 1.0F);
+
+                if(settings.isAudioNotificationEnabled()){
+                    player.playSound(settings.getNotificationSound(), 0.5F, 1.0F);
+                }
                 wasOnCooldown = false;
             }
         }

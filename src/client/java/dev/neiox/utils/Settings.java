@@ -1,6 +1,8 @@
 package dev.neiox.utils;
 
 import dev.neiox.enums.settings.SettingOptions;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 
 public class Settings {
 
@@ -15,8 +17,9 @@ public class Settings {
 
     private SettingOptions.CooldownDisplayMode cooldownDisplayMode = SettingOptions.CooldownDisplayMode.NUMERIC;
     private SettingOptions.CooldownNumericMode cooldownNumericMode = SettingOptions.CooldownNumericMode.PERCENTAGE;
-
     private boolean audioNotification = false;
+    private SoundEvent notificationSound = SoundEvents.NOTE_BLOCK_BELL.value();
+
 
    public SettingOptions.CooldownDisplayMode getCooldownDisplayMode() {
         return cooldownDisplayMode;
@@ -41,4 +44,10 @@ public class Settings {
         this.audioNotification = enabled;
     }
 
+    public SoundEvent getNotificationSound() {
+        return notificationSound;
+    }
+    public void setNotificationSound(SoundEvent sound) {
+        this.notificationSound = sound;
+    }
 }
