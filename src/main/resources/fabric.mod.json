@@ -20,7 +20,10 @@
 		],
 		"client": [
 			"dev.neiox.CooldownEnhancedClient"
-		]
+		],
+        "modmenu": [
+            "dev.neiox.utils.ModMenuIntegration"
+        ]
 	},
 	"mixins": [
 		"cooldown-enhanced.mixins.json",
