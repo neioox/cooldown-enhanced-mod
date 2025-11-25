@@ -1,12 +1,14 @@
 package dev.neiox.mixin.client;
 
-import dev.neiox.utils.Settings;
+import dev.neiox.utils.ModConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,38 +35,83 @@ public class GuiMixin {
     }
 
     @Unique
-    Settings settings = Settings.getInstance();
+    private void renderCooldownBarMode(GuiGraphics guiGraphics, Minecraft minecraft, float attackStrengthScale) {
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
 
-    @Inject(at = @At("HEAD"), method = "render")
-    private  void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci){
+        // Breite wie zuvor (1/15 der Bildschirmbreite) beibehalten und horizontal zentrieren
+        int barWidth = screenWidth * 2 / 5 - screenWidth / 3;
+        int x1 = (screenWidth - barWidth) / 2;
+        int x2 = x1 + barWidth;
+
+        int verticalOffset = 20; // Abstand von der Mitte nach unten
+        int barHeight = 4;
+
+        int y1 = screenHeight / 2 + verticalOffset;
+        int y2 = y1 + barHeight;
+
+        drawBar(guiGraphics, x1, y1, x2, y2, attackStrengthScale);
+    }
+
+    @Unique
+    private void drawBar(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, float progress) {
+        int width = x2 - x1;
+        progress = Mth.clamp(progress, 0.0F, 1.0F);
+        // Hintergrund
+        guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
+        // Fortschritt
+        int progressWidth = (int) (width * progress);
+        guiGraphics.fill(x1, y1, x1 + progressWidth, y2, ARGB.color(255, 0, 255, 0));
+    }
+
+      @Unique
+    ModConfig settings = ModConfig.getInstance();
+@Inject(at = @At("HEAD"), method = "render")
+    private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null) return;
+
         float attackStrengthScale = player.getAttackStrengthScale(0.0F);
-        if(attackStrengthScale < 1.0F){
+
+        if (attackStrengthScale < 1.0F) {
             wasOnCooldown = true;
 
-            String text = "";
+            if (settings.getCooldownDisplayMode() == dev.neiox.enums.settings.SettingOptions.CooldownDisplayMode.BAR) {
+                renderCooldownBarMode(guiGraphics, minecraft, attackStrengthScale);
+                return;
+            }
 
-            switch (Settings.getInstance().getCooldownNumericMode()){
-
-                case DECIMAL -> {
-                    text = String.format("%.2f", attackStrengthScale);
-                }
+            String text;
+            switch (ModConfig.getInstance().getCooldownNumericMode()) {
+                case DECIMAL -> text = String.format("%.2f", attackStrengthScale);
                 case PERCENTAGE -> {
                     int cooldownPercentage = (int) (attackStrengthScale * 100);
                     text = String.format("%d%%", cooldownPercentage);
                 }
+                default -> text = "";
             }
             renderCooldownNumericMode(guiGraphics, minecraft, text);
-        }else{
-            if(wasOnCooldown){
-                renderCooldownNumericMode(guiGraphics, minecraft, "100%");
+        } else {
+            if (wasOnCooldown) {
 
-                if(settings.isAudioNotificationEnabled()){
+                if (settings.getCooldownDisplayMode() == dev.neiox.enums.settings.SettingOptions.CooldownDisplayMode.BAR) {
+                    renderCooldownBarMode(guiGraphics, minecraft, 1.0F);
+                }
+
+                if(settings.getCooldownDisplayMode() == dev.neiox.enums.settings.SettingOptions.CooldownDisplayMode.NUMERIC) {
+
+                    if (settings.getCooldownNumericMode() == dev.neiox.enums.settings.SettingOptions.CooldownNumericMode.DECIMAL) {
+                        renderCooldownNumericMode(guiGraphics, minecraft, "1.00");
+                    } else if (settings.getCooldownNumericMode() == dev.neiox.enums.settings.SettingOptions.CooldownNumericMode.PERCENTAGE) {
+                        renderCooldownNumericMode(guiGraphics, minecraft, "100%");
+                    }
+                }
+                if (settings.isAudioNotificationEnabled()) {
                     player.playSound(settings.getNotificationSound(), 0.5F, 1.0F);
                 }
+
                 wasOnCooldown = false;
             }
         }

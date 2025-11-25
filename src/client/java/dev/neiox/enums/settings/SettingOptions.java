@@ -9,7 +9,8 @@ public class SettingOptions {
 
     public enum CooldownNumericMode {
         DECIMAL,
-        PERCENTAGE
+        PERCENTAGE,
+        SECONDS
     }
 
 }
