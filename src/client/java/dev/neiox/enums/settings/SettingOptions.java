@@ -12,5 +12,4 @@ public class SettingOptions {
         PERCENTAGE,
         SECONDS
     }
-
 }
