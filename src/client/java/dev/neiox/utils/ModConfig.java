@@ -3,6 +3,8 @@ package dev.neiox.utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.neiox.enums.settings.SettingOptions;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 
@@ -14,13 +16,13 @@ public class ModConfig {
 
     private static ModConfig instance;
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_PATH = Path.of("config", "cooldown_enhanced_settings.json");
+    private static  Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static  Path CONFIG_PATH = Path.of("config", "cooldown_enhanced_settings.json");
 
     private SettingOptions.CooldownDisplayMode cooldownDisplayMode = SettingOptions.CooldownDisplayMode.NUMERIC;
     private SettingOptions.CooldownNumericMode cooldownNumericMode = SettingOptions.CooldownNumericMode.PERCENTAGE;
     private boolean audioNotification = false;
-    private SoundEvent notificationSound = SoundEvents.NOTE_BLOCK_BELL.value();
+    private String notificationSoundId = "minecraft:block.note_block.bell";
 
     private ModConfig() {}
 
@@ -90,11 +92,20 @@ public class ModConfig {
     }
 
     public SoundEvent getNotificationSound() {
-        return notificationSound;
+        try {
+            ResourceLocation location = ResourceLocation.parse(notificationSoundId);
+            return BuiltInRegistries.SOUND_EVENT.getOptional(location)
+                    .orElse(SoundEvents.NOTE_BLOCK_BELL.value());
+        } catch (Exception e) {
+            return SoundEvents.NOTE_BLOCK_BELL.value();
+        }
     }
 
     public void setNotificationSound(SoundEvent sound) {
-        this.notificationSound = sound;
+        ResourceLocation location = BuiltInRegistries.SOUND_EVENT.getKey(sound);
+        if (location != null) {
+            this.notificationSoundId = location.toString();
+        }
         save();
     }
 
