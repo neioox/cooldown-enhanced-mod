@@ -6,8 +6,13 @@ This Fabric mod improves and extends cooldown behavior after hitting in Minecraf
 ## Features
 - Enhanced cooldown mechanics for abilities and attacks.  
 - Fully customizable settings.  
-- Cooldown display as a progress bar.  
-- Cooldown display as a numeric value.  
+<img width="1920" height="1009" alt="image" src="https://github.com/user-attachments/assets/5b408223-70be-4a74-b6ad-88b8f19834c6" />
+
+- Cooldown display as a progress bar.
+  <img width="1920" height="1009" alt="image" src="https://github.com/user-attachments/assets/7734cd68-a961-4daf-a23b-fb1acc1aa952" />
+
+- Cooldown display as a numeric value.
+  <img width="1920" height="1009" alt="image" src="https://github.com/user-attachments/assets/56cfe036-e7f5-4184-8337-eb61f12c7303" />
 - Optional sound notification when the cooldown finishes.  
 
 ## Installation
