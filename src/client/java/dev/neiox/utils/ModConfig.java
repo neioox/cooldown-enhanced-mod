@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.neiox.enums.settings.SettingOptions;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 
@@ -93,8 +93,8 @@ public class ModConfig {
 
     public SoundEvent getNotificationSound() {
         try {
-            ResourceLocation location = ResourceLocation.parse(notificationSoundId);
-            return BuiltInRegistries.SOUND_EVENT.getOptional(location)
+            Identifier identifier = Identifier.parse(notificationSoundId);
+            return BuiltInRegistries.SOUND_EVENT.getOptional(identifier)
                     .orElse(SoundEvents.NOTE_BLOCK_BELL.value());
         } catch (Exception e) {
             return SoundEvents.NOTE_BLOCK_BELL.value();
@@ -102,9 +102,9 @@ public class ModConfig {
     }
 
     public void setNotificationSound(SoundEvent sound) {
-        ResourceLocation location = BuiltInRegistries.SOUND_EVENT.getKey(sound);
-        if (location != null) {
-            this.notificationSoundId = location.toString();
+        Identifier identifier = BuiltInRegistries.SOUND_EVENT.getKey(sound);
+        if (identifier != null) {
+            this.notificationSoundId = identifier.toString();
         }
         save();
     }
