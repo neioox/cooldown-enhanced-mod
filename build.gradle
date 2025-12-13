@@ -2,6 +2,7 @@ plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm'
+    id 'com.modrinth.minotaur' version '2.+'
 }
 
 version = project.mod_version
@@ -93,3 +94,19 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "cooldown-enhanced" // Deine Modrinth Project ID oder Slug
+    versionNumber = project.mod_version
+    versionType = "release" // release, beta, oder alpha
+    uploadFile = remapJar
+    gameVersions = [project.minecraft_version]
+    loaders = ["fabric"]
+    dependencies {
+        required.project "fabric-api"
+        optional.project "modmenu"
+        optional.project "cloth-config"
+    }
+}
+
