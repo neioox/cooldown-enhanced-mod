@@ -1,10 +1,17 @@
 name: Release
+
 on:
   workflow_dispatch:
     inputs:
       version:
         description: 'Version to release (e.g., 1.0.0)'
         required: true
+      minecraft_version:
+        description: 'Minecraft version to release for (e.g., 1.20.4)'
+        required: true
+
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -30,23 +37,24 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace
 
-      - name: Publish to Modrinth
-        run: ./gradlew modrinth --stacktrace
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Publish to Modrinth/GitHub
+        uses: Kir-Antipov/mc-publish@v3.3
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: Release v${{ github.event.inputs.version }}
-          files: build/libs/*.jar
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          loaders: fabric
+          version-type: alpha
+          game-versions: ${{ github.event.inputs.minecraft_version }}
+          version: ${{ github.event.inputs.version }}
+
+          modrinth-id: O1NqR8b2
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          github-prerelease: true
+          github-tag: v${{ github.event.inputs.version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
-          path: build/libs/
+          name: Artifacts-${{ github.event.inputs.version }}
+          path: |
+            build/libs/*.jar
