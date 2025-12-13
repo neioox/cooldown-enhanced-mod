@@ -3,10 +3,12 @@ package dev.neiox.utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.neiox.enums.settings.SettingOptions;
+import me.shedaniel.math.Color;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.ARGB;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -23,6 +25,7 @@ public class ModConfig {
     private SettingOptions.CooldownNumericMode cooldownNumericMode = SettingOptions.CooldownNumericMode.PERCENTAGE;
     private boolean audioNotification = false;
     private String notificationSoundId = "minecraft:block.note_block.bell";
+    private int barColor =  ARGB.color(255, 0, 255, 0);
 
     private ModConfig() {}
 
@@ -99,6 +102,15 @@ public class ModConfig {
         } catch (Exception e) {
             return SoundEvents.NOTE_BLOCK_BELL.value();
         }
+    }
+
+    public int getBarColor() {
+        return barColor;
+    }
+
+    public void setBarColor(int a, int r, int g, int b) {
+        this.barColor = ARGB.color(a, r, g, b);
+        save();
     }
 
     public void setNotificationSound(SoundEvent sound) {
