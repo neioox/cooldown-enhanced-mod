@@ -1,6 +1,7 @@
 package dev.neiox.mixin.client;
 
 import dev.neiox.utils.ModConfig;
+import me.shedaniel.math.Color;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -20,6 +21,8 @@ public class GuiMixin {
 
     @Unique
     boolean wasOnCooldown = false;
+    @Unique
+    ModConfig settings = ModConfig.getInstance();
 
     @Unique
     private void renderCooldownNumericMode(GuiGraphics guiGraphics, Minecraft minecaft, String text){
@@ -61,11 +64,9 @@ public class GuiMixin {
         guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
         // Fortschritt
         int progressWidth = (int) (width * progress);
-        guiGraphics.fill(x1, y1, x1 + progressWidth, y2, ARGB.color(255, 0, 255, 0));
+        guiGraphics.fill(x1, y1, x1 + progressWidth, y2,  settings.getBarColor());
     }
 
-      @Unique
-    ModConfig settings = ModConfig.getInstance();
 @Inject(at = @At("HEAD"), method = "render")
     private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 

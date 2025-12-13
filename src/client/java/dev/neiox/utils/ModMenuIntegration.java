@@ -3,7 +3,6 @@ package dev.neiox.utils;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.neiox.enums.settings.SettingOptions;
-import dev.neiox.utils.ModConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -12,6 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.ARGB;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,7 +78,49 @@ public class ModMenuIntegration implements ModMenuApi {
                     .setSaveConsumer(config::setNotificationSound)
                     .build());
 
-            builder.setSavingRunnable(config::save);
+            // 5. Bar Color (ARGB sliders)
+            ConfigCategory colorCat = builder.getOrCreateCategory(Component.literal("Bar Color"));
+
+            int color = config.getBarColor();
+            int a = ARGB.alpha(color);
+            int r = ARGB.red(color);
+            int g = ARGB.green(color);
+            int b = ARGB.blue(color);
+
+            final int[] newA = {a};
+            final int[] newR = {r};
+            final int[] newG = {g};
+            final int[] newB = {b};
+
+            colorCat.addEntry(entryBuilder
+                    .startIntSlider(Component.literal("Alpha (A)"), a, 0, 255)
+                    .setDefaultValue(255)
+                    .setSaveConsumer(val -> newA[0] = val)
+                    .build());
+
+            colorCat.addEntry(entryBuilder
+                    .startIntSlider(Component.literal("Red (R)"), r, 0, 255)
+                    .setDefaultValue(0)
+                    .setSaveConsumer(val -> newR[0] = val)
+                    .build());
+
+            colorCat.addEntry(entryBuilder
+                    .startIntSlider(Component.literal("Green (G)"), g, 0, 255)
+                    .setDefaultValue(255)
+                    .setSaveConsumer(val -> newG[0] = val)
+                    .build());
+
+            colorCat.addEntry(entryBuilder
+                    .startIntSlider(Component.literal("Blue (B)"), b, 0, 255)
+                    .setDefaultValue(0)
+                    .setSaveConsumer(val -> newB[0] = val)
+                    .build());
+
+            builder.setSavingRunnable(() -> {
+                config.setBarColor(newA[0], newR[0], newG[0], newB[0]);
+                config.save();
+            });
+
             return builder.build();
         };
     }
