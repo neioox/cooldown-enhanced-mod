@@ -30,20 +30,17 @@ jobs:
       - name: Build
         run: ./gradlew build --stacktrace
 
-      - name: Publish to Modrinth
-        run: ./gradlew modrinth --stacktrace
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - uses: Kir-Antipov/mc-publish@v3.3
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: Release v${{ github.event.inputs.version }}
-          files: build/libs/*.jar
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Only include this section if you wish to publish
+        # your assets on Modrinth.
+          modrinth-id: O1NqR8b2
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          # Only include this section if you wish to publish
+          # your assets on GitHub.
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
