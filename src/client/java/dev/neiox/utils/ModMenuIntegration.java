@@ -9,7 +9,7 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.ARGB;
 
@@ -72,7 +72,7 @@ public class ModMenuIntegration implements ModMenuApi {
                             sounds.toArray(new SoundEvent[0]),
                             current
                     )
-                    .setDefaultValue(SoundEvent.createVariableRangeEvent(ResourceLocation.parse("minecraft:note_block.bell")))
+                    .setDefaultValue(SoundEvent.createVariableRangeEvent(Identifier.parse("minecraft:note_block.bell")))
                     .setNameProvider(sound -> Component.literal(
                             BuiltInRegistries.SOUND_EVENT.getKey(sound).toString()))
                     .setSaveConsumer(config::setNotificationSound)
