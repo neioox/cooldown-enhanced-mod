@@ -87,7 +87,7 @@ public class GuiMixin {
         LocalPlayer player = minecraft.player;
         if (player == null) return;
 
-        if(minecraft.options.attackIndicator().get() != AttackIndicatorStatus.CROSSHAIR) return;
+        if (minecraft.options.attackIndicator().get() != AttackIndicatorStatus.CROSSHAIR) return;
         float attackStrengthScale = player.getAttackStrengthScale(0.0F);
 
         if (attackStrengthScale < 1.0F) {
