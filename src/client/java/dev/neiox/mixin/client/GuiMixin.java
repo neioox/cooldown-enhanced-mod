@@ -1,12 +1,11 @@
 package dev.neiox.mixin.client;
 
 import dev.neiox.utils.ModConfig;
-import me.shedaniel.math.Color;
+import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -47,7 +46,7 @@ public class GuiMixin {
         int x1 = (screenWidth - barWidth) / 2;
         int x2 = x1 + barWidth;
 
-        int verticalOffset = 20; // Abstand von der Mitte nach unten
+        int verticalOffset = 15; // Abstand von der Mitte nach unten
         int barHeight = 4;
 
         int y1 = screenHeight / 2 + verticalOffset;
@@ -67,13 +66,28 @@ public class GuiMixin {
         guiGraphics.fill(x1, y1, x1 + progressWidth, y2,  settings.getBarColor());
     }
 
-@Inject(at = @At("HEAD"), method = "render")
+    // Skip the default attack indicator rendering
+    @Inject(
+            method = "renderCrosshair(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/DeltaTracker;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/Options;attackIndicator()Lnet/minecraft/client/OptionInstance;",
+                    shift = At.Shift.BEFORE
+            ),
+            cancellable = true
+    )
+    private void skipAttackIndicator(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        ci.cancel();
+    }
+
+    @Inject(at = @At("HEAD"), method = "render")
     private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null) return;
 
+        if (minecraft.options.attackIndicator().get() != AttackIndicatorStatus.CROSSHAIR) return;
         float attackStrengthScale = player.getAttackStrengthScale(0.0F);
 
         if (attackStrengthScale < 1.0F) {
