@@ -1,24 +1,33 @@
 package dev.neiox.mixin.client;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import dev.neiox.utils.ModConfig;
 import me.shedaniel.math.Color;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBossEventPacket;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import net.minecraft.world.BossEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.UUID;
+
 @Mixin(Gui.class)
 public class GuiMixin {
-
+    private static final Identifier[] OVERLAY_PROGRESS_SPRITES = new Identifier[]{Identifier.withDefaultNamespace("boss_bar/notched_6_progress"), Identifier.withDefaultNamespace("boss_bar/notched_10_progress"), Identifier.withDefaultNamespace("boss_bar/notched_12_progress"), Identifier.withDefaultNamespace("boss_bar/notched_20_progress")};
     @Unique
     boolean wasOnCooldown = false;
     @Unique
@@ -60,14 +69,21 @@ public class GuiMixin {
     private void drawBar(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, float progress) {
         int width = x2 - x1;
         progress = Mth.clamp(progress, 0.0F, 1.0F);
+        int textureWidth = 182;
+        int textureHeight = 5;
         // Hintergrund
-        guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
+        //guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_background"), x1, y1, width, textureHeight);
+
         // Fortschritt
         int progressWidth = (int) (width * progress);
-        guiGraphics.fill(x1, y1, x1 + progressWidth, y2,  settings.getBarColor());
+
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_progress"), x1, y1, progressWidth,textureHeight);
+        //guiGraphics.fill(x1, y1, x1 + progressWidth, y2,  settings.getBarColor());
     }
 
-@Inject(at = @At("HEAD"), method = "render")
+
+    @Inject(at = @At("HEAD"), method = "render")
     private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
         Minecraft minecraft = Minecraft.getInstance();
