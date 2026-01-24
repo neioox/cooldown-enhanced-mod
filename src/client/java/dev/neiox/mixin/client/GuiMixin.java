@@ -52,8 +52,7 @@ public class GuiMixin {
 
         int baseBarWidth = screenWidth * 2 / 5 - screenWidth / 3;
         int barWidth = baseBarWidth * scale;
-        int barHeight = 4 * scale;
-        ;
+        int barHeight = 4 * scale;;
 
         int x1 = (screenWidth - barWidth) / 2;
         int y1 = screenHeight / 2 + 20;
