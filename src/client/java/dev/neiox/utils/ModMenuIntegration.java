@@ -30,27 +30,38 @@ public class ModMenuIntegration implements ModMenuApi {
             ConfigCategory general = builder.getOrCreateCategory(Component.literal("General Settings"));
             ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
-            // 1. Cooldown Display Mode
             general.addEntry(entryBuilder.startEnumSelector(
                             Component.literal("Cooldown Display Mode"),
                             SettingOptions.CooldownDisplayMode.class,
                             config.getCooldownDisplayMode()
                     )
                     .setDefaultValue(SettingOptions.CooldownDisplayMode.NUMERIC)
+                    .setTooltip(Component.literal("Requires a restart of the screen to show related options."))
                     .setSaveConsumer(config::setCooldownDisplayMode)
                     .build());
 
-            // 2. Numeric Mode
-            general.addEntry(entryBuilder.startEnumSelector(
-                            Component.literal("Numeric Mode"),
-                            SettingOptions.CooldownNumericMode.class,
-                            config.getCooldownNumericMode()
-                    )
-                    .setDefaultValue(SettingOptions.CooldownNumericMode.PERCENTAGE)
-                    .setSaveConsumer(config::setCooldownNumericMode)
+            general.addEntry(entryBuilder.startBooleanToggle(Component.literal("Modern bar style"), config.getModernBarStyle())
+                    .setDefaultValue(false)
+                    .setSaveConsumer(config::setModernBarStyle)
                     .build());
 
-            // 3. Audio Notification Toggle
+
+            general.addEntry(entryBuilder.startIntSlider(Component.literal("Attack Indicator Scale"), config.getAttackIndicatorScale(), 1, 5)
+                    .setDefaultValue(1)
+                    .setSaveConsumer(config::setAttackIndicatorScale)
+                    .build());
+
+            if(config.getCooldownDisplayMode() == SettingOptions.CooldownDisplayMode.NUMERIC) {
+                general.addEntry(entryBuilder.startEnumSelector(
+                                Component.literal("Numeric Mode"),
+                                SettingOptions.CooldownNumericMode.class,
+                                config.getCooldownNumericMode()
+                        )
+                        .setDefaultValue(SettingOptions.CooldownNumericMode.PERCENTAGE)
+                        .setSaveConsumer(config::setCooldownNumericMode)
+                        .build());
+            }
+
             general.addEntry(entryBuilder.startBooleanToggle(
                             Component.literal("Enable Audio Notification"),
                             config.isAudioNotificationEnabled()
@@ -59,26 +70,21 @@ public class ModMenuIntegration implements ModMenuApi {
                     .setSaveConsumer(config::setAudioNotification)
                     .build());
 
-            // 4. Notification Sound (SoundEvent dropdown)
             List<SoundEvent> sounds = BuiltInRegistries.SOUND_EVENT.stream()
                     .sorted((a, b) -> BuiltInRegistries.SOUND_EVENT.getKey(a)
                             .compareTo(BuiltInRegistries.SOUND_EVENT.getKey(b)))
                     .collect(Collectors.toList());
 
-            SoundEvent current = config.getNotificationSound();
-
             general.addEntry(entryBuilder.startSelector(
                             Component.literal("Notification Sound"),
                             sounds.toArray(new SoundEvent[0]),
-                            current
+                            config.getNotificationSound()
                     )
                     .setDefaultValue(SoundEvent.createVariableRangeEvent(Identifier.parse("minecraft:note_block.bell")))
                     .setNameProvider(sound -> Component.literal(
                             BuiltInRegistries.SOUND_EVENT.getKey(sound).toString()))
                     .setSaveConsumer(config::setNotificationSound)
                     .build());
-
-            // 5. Bar Color (ARGB sliders)
             ConfigCategory colorCat = builder.getOrCreateCategory(Component.literal("Bar Color"));
 
             int color = config.getBarColor();
