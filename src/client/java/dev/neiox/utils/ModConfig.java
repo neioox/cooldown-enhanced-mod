@@ -21,11 +21,13 @@ public class ModConfig {
     private static  Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static  Path CONFIG_PATH = Path.of("config", "cooldown_enhanced_settings.json");
 
-    private SettingOptions.CooldownDisplayMode cooldownDisplayMode = SettingOptions.CooldownDisplayMode.NUMERIC;
+    private SettingOptions.CooldownDisplayMode cooldownDisplayMode = SettingOptions.CooldownDisplayMode.DEFAULT;
     private SettingOptions.CooldownNumericMode cooldownNumericMode = SettingOptions.CooldownNumericMode.PERCENTAGE;
     private boolean audioNotification = false;
     private String notificationSoundId = "minecraft:block.note_block.bell";
     private int barColor =  ARGB.color(255, 0, 255, 0);
+    private int attackIndicatorScale = 1;
+    private boolean modernBarStyle = false;
 
     private ModConfig() {}
 
@@ -118,6 +120,23 @@ public class ModConfig {
         if (identifier != null) {
             this.notificationSoundId = identifier.toString();
         }
+        save();
+    }
+
+    public int getAttackIndicatorScale() {
+        return attackIndicatorScale;
+    }
+
+    public void setAttackIndicatorScale(int scale) {
+        this.attackIndicatorScale = scale;
+        save();
+    }
+
+    public boolean getModernBarStyle() {
+        return modernBarStyle;
+    }
+    public void setModernBarStyle(boolean modernBarStyle) {
+        this.modernBarStyle = modernBarStyle;
         save();
     }
 
