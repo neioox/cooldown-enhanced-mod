@@ -4,7 +4,8 @@ public class SettingOptions {
 
    public enum CooldownDisplayMode {
         NUMERIC,
-        BAR
+        BAR,
+        DEFAULT
     }
 
     public enum CooldownNumericMode {

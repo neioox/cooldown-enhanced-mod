@@ -1,30 +1,36 @@
 package dev.neiox.mixin.client;
 
+import dev.neiox.enums.settings.SettingOptions;
 import dev.neiox.utils.ModConfig;
 import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.UUID;
 
 @Mixin(Gui.class)
 public class GuiMixin {
-
     @Unique
     boolean wasOnCooldown = false;
     @Unique
     ModConfig settings = ModConfig.getInstance();
 
     @Unique
-    private void renderCooldownNumericMode(GuiGraphics guiGraphics, Minecraft minecaft, String text){
+    private void renderCooldownNumericMode(GuiGraphics guiGraphics, Minecraft minecaft, String text) {
         int screenWidth = minecaft.getWindow().getGuiScaledWidth();
         int screenHeight = minecaft.getWindow().getGuiScaledHeight() + 40;
 
@@ -38,56 +44,61 @@ public class GuiMixin {
 
     @Unique
     private void renderCooldownBarMode(GuiGraphics guiGraphics, Minecraft minecraft, float attackStrengthScale) {
+        int scale = Math.max(1, settings.getAttackIndicatorScale());
+
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
 
-        // Breite wie zuvor (1/15 der Bildschirmbreite) beibehalten und horizontal zentrieren
-        int barWidth = screenWidth * 2 / 5 - screenWidth / 3;
+        int baseBarWidth = screenWidth * 2 / 5 - screenWidth / 3;
+        int barWidth = baseBarWidth * scale;
+        int barHeight = 4 * scale;;
+
         int x1 = (screenWidth - barWidth) / 2;
+        int y1 = screenHeight / 2 + 20;
+
         int x2 = x1 + barWidth;
-
-        int verticalOffset = 15; // Abstand von der Mitte nach unten
-        int barHeight = 4;
-
-        int y1 = screenHeight / 2 + verticalOffset;
         int y2 = y1 + barHeight;
 
-        drawBar(guiGraphics, x1, y1, x2, y2, attackStrengthScale);
+        drawBar(guiGraphics, x1, y1, x2, y2, attackStrengthScale, settings.getModernBarStyle());
     }
+
 
     @Unique
-    private void drawBar(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, float progress) {
+    private void drawBar(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, float progress, boolean modernBar) {
         int width = x2 - x1;
         progress = Mth.clamp(progress, 0.0F, 1.0F);
-        // Hintergrund
-        guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
-        // Fortschritt
+        int textureWidth = 182;
+        int textureHeight = 5;
         int progressWidth = (int) (width * progress);
-        guiGraphics.fill(x1, y1, x1 + progressWidth, y2,  settings.getBarColor());
+
+        if (modernBar) {
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, ResourceLocation.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_background"), x1, y1, width, textureHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, ResourceLocation.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_progress"), x1, y1, progressWidth, textureHeight);
+            return;
+        }
+
+        guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
+        guiGraphics.fill(x1, y1, x1 + progressWidth, y2, settings.getBarColor());
     }
 
-    // Skip the default attack indicator rendering
-    @Inject(
-            method = "renderCrosshair(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/DeltaTracker;)V",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/Options;attackIndicator()Lnet/minecraft/client/OptionInstance;",
-                    shift = At.Shift.BEFORE
-            ),
-            cancellable = true
+
+    @Redirect(
+            method = "renderCrosshair",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;")
     )
-    private void skipAttackIndicator(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        ci.cancel();
+    private Object cancelAttackIndicatorCheck(OptionInstance instance) {
+        if (settings.getCooldownDisplayMode() != SettingOptions.CooldownDisplayMode.DEFAULT) {
+            return AttackIndicatorStatus.OFF;
+        }
+        return instance.get();
     }
-
-    @Inject(at = @At("HEAD"), method = "render")
+        @Inject(at = @At("HEAD"), method = "render")
     private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         if (player == null) return;
 
-        if (minecraft.options.attackIndicator().get() != AttackIndicatorStatus.CROSSHAIR) return;
         float attackStrengthScale = player.getAttackStrengthScale(0.0F);
 
         if (attackStrengthScale < 1.0F) {
@@ -95,6 +106,8 @@ public class GuiMixin {
 
             if (settings.getCooldownDisplayMode() == dev.neiox.enums.settings.SettingOptions.CooldownDisplayMode.BAR) {
                 renderCooldownBarMode(guiGraphics, minecraft, attackStrengthScale);
+                return;
+            }else if (settings.getCooldownDisplayMode() == SettingOptions.CooldownDisplayMode.DEFAULT) {
                 return;
             }
 

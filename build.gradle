@@ -4,7 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
 
-version = project.mod_version
+version = project.findProperty("mod_version") ?: "0.0.0-dev"
 group = project.maven_group
 
 base {
