@@ -48,6 +48,10 @@ jobs:
           modrinth-id: O1NqR8b2
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
 
+          curseforge-id: 1411196
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+
           github-prerelease: true
           github-tag: v${{ github.event.inputs.version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
