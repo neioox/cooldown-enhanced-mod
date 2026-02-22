@@ -13,17 +13,28 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.UUID;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Gui.class)
 public class GuiMixin {
+    @Shadow
+    @Final
+    private Minecraft minecraft;
+    @Shadow
+    @Final
+    private static ResourceLocation CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE;
+    @Shadow
+    @Final
+    private static ResourceLocation CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE;
+    @Shadow
+    @Final
+    private static ResourceLocation CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE;
     @Unique
     boolean wasOnCooldown = false;
     @Unique
@@ -80,7 +91,78 @@ public class GuiMixin {
         guiGraphics.fill(x1, y1, x2, y2, ARGB.color(100, 0, 0, 0));
         guiGraphics.fill(x1, y1, x1 + progressWidth, y2, settings.getBarColor());
     }
+    @ModifyArgs(
+            method = "renderCrosshair",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIII)V"
+            )
+    )
+    private void scaleAttackIndicatorFixed(Args args) {
+        net.minecraft.resources.ResourceLocation sprite = (net.minecraft.resources.ResourceLocation) args.get(1);
 
+        if (!sprite.equals(CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE)
+                && !sprite.equals(CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE)) {
+            return;
+        }
+
+        int scale = Math.max(1, settings.getAttackIndicatorScale());
+        if (scale == 1) return;
+
+        int x = (int) args.get(2);
+        int y = (int) args.get(3);
+        int w = (int) args.get(4);
+        int h = (int) args.get(5);
+
+        int nw = w * scale;
+        int nh = h * scale;
+
+        args.set(2, x - (nw - w) / 2);
+        args.set(3, y - (nh - h) / 2);
+        args.set(4, nw);
+        args.set(5, nh);
+    }
+
+    @ModifyArgs(
+            method = "renderCrosshair",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIIIIIII)V"
+            )
+    )
+    private void scaleAttackIndicatorProgress(Args args) {
+        net.minecraft.resources.ResourceLocation sprite = (net.minecraft.resources.ResourceLocation) args.get(1);
+        if (!sprite.equals(CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE)) return;
+
+        int scale = Math.max(1, settings.getAttackIndicatorScale());
+        if (scale == 1) return;
+
+        int baseW = (int) args.get(2);
+        int baseH = (int) args.get(3);
+
+        int u = (int) args.get(4);
+        int v = (int) args.get(5);
+
+        int x = (int) args.get(6);
+        int y = (int) args.get(7);
+
+        int w = (int) args.get(8);
+        int h = (int) args.get(9);
+
+        int nx = x - (baseW * (scale - 1)) / 2;
+        int ny = y - (baseH * (scale - 1)) / 2;
+
+        args.set(2, baseW * scale);
+        args.set(3, baseH * scale);
+
+        args.set(4, u * scale);
+        args.set(5, v * scale);
+
+        args.set(6, nx);
+        args.set(7, ny);
+        args.set(8, w * scale);
+        args.set(9, h * scale);
+    }
 
     @Redirect(
             method = "renderCrosshair",
@@ -99,6 +181,7 @@ public class GuiMixin {
         LocalPlayer player = minecraft.player;
         if (player == null) return;
 
+
         float attackStrengthScale = player.getAttackStrengthScale(0.0F);
 
         if (attackStrengthScale < 1.0F) {
@@ -107,8 +190,7 @@ public class GuiMixin {
             if (settings.getCooldownDisplayMode() == dev.neiox.enums.settings.SettingOptions.CooldownDisplayMode.BAR) {
                 renderCooldownBarMode(guiGraphics, minecraft, attackStrengthScale);
                 return;
-            }else if (settings.getCooldownDisplayMode() == SettingOptions.CooldownDisplayMode.DEFAULT) {
-                return;
+
             }
 
             String text;
