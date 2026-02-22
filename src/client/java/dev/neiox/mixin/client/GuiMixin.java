@@ -13,17 +13,30 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.UUID;
 
 @Mixin(Gui.class)
 public class GuiMixin {
+    @Shadow
+    @Final
+    private static Identifier CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE;
+    @Shadow
+    @Final
+    private static Identifier CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE;
+    @Shadow
+    @Final
+    private static Identifier CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE;
     private static final Identifier[] OVERLAY_PROGRESS_SPRITES = new Identifier[]{Identifier.withDefaultNamespace("boss_bar/notched_6_progress"), Identifier.withDefaultNamespace("boss_bar/notched_10_progress"), Identifier.withDefaultNamespace("boss_bar/notched_12_progress"), Identifier.withDefaultNamespace("boss_bar/notched_20_progress")};
     @Unique
     boolean wasOnCooldown = false;
@@ -93,6 +106,78 @@ public class GuiMixin {
         }
         return instance.get();
     }
+
+    @ModifyArgs(
+            method = "renderCrosshair",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
+            )
+    )
+    private void scaleAttackIndicatorFixed(Args args) {
+        net.minecraft.resources.Identifier sprite = (net.minecraft.resources.Identifier) args.get(1);
+
+        if (!sprite.equals(CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE)
+                && !sprite.equals(CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE)) {
+            return;
+        }
+
+        int scale = Math.max(1, settings.getAttackIndicatorScale());
+        if (scale == 1) return;
+
+        int x = (int) args.get(2);
+        int y = (int) args.get(3);
+        int w = (int) args.get(4);
+        int h = (int) args.get(5);
+
+        int nw = w * scale;
+        int nh = h * scale;
+
+        args.set(2, x - (nw - w) / 2);
+        args.set(3, y - (nh - h) / 2);
+        args.set(4, nw);
+        args.set(5, nh);
+    }
+    @ModifyArgs(
+            method = "renderCrosshair",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIIIIII)V"
+            )
+    )
+    private void scaleAttackIndicatorProgress(Args args) {
+        net.minecraft.resources.Identifier sprite = (net.minecraft.resources.Identifier) args.get(1);
+        if (!sprite.equals(CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE)) return;
+
+        int scale = Math.max(1, settings.getAttackIndicatorScale());
+        if (scale == 1) return;
+
+        int baseW = (int) args.get(2);
+        int baseH = (int) args.get(3);
+
+        int u = (int) args.get(4);
+        int v = (int) args.get(5);
+
+        int x = (int) args.get(6);
+        int y = (int) args.get(7);
+
+        int w = (int) args.get(8);
+        int h = (int) args.get(9);
+
+        int nx = x - (baseW * (scale - 1)) / 2;
+        int ny = y - (baseH * (scale - 1)) / 2;
+
+        args.set(2, baseW * scale);
+        args.set(3, baseH * scale);
+
+        args.set(4, u * scale);
+        args.set(5, v * scale);
+
+        args.set(6, nx);
+        args.set(7, ny);
+        args.set(8, w * scale);
+    }
+
         @Inject(at = @At("HEAD"), method = "render")
     private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
