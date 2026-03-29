@@ -7,7 +7,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
@@ -44,7 +44,7 @@ public class GuiMixin {
     ModConfig settings = ModConfig.getInstance();
 
     @Unique
-    private void renderCooldownNumericMode(GuiGraphics guiGraphics, Minecraft minecaft, String text) {
+    private void renderCooldownNumericMode(GuiGraphicsExtractor guiGraphics, Minecraft minecaft, String text) {
         int screenWidth = minecaft.getWindow().getGuiScaledWidth();
         int screenHeight = minecaft.getWindow().getGuiScaledHeight() + 40;
 
@@ -53,11 +53,11 @@ public class GuiMixin {
 
         int x = (screenWidth - textWidth) / 2;
         int y = (screenHeight - textHeight) / 2;
-        guiGraphics.drawString(minecaft.font, text, x, y, 0xFFFFFFFF, true);
+        guiGraphics.text(minecaft.font, text, x, y, 0xFFFFFFFF, true);
     }
 
     @Unique
-    private void renderCooldownBarMode(GuiGraphics guiGraphics, Minecraft minecraft, float attackStrengthScale) {
+    private void renderCooldownBarMode(GuiGraphicsExtractor guiGraphics, Minecraft minecraft, float attackStrengthScale) {
         int scale = Math.max(1, settings.getAttackIndicatorScale());
 
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
@@ -78,7 +78,7 @@ public class GuiMixin {
 
 
     @Unique
-    private void drawBar(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, float progress, boolean modernBar) {
+    private void drawBar(GuiGraphicsExtractor guiGraphics, int x1, int y1, int x2, int y2, float progress, boolean modernBar) {
         int width = x2 - x1;
         progress = Mth.clamp(progress, 0.0F, 1.0F);
         int textureWidth = 182;
@@ -97,7 +97,7 @@ public class GuiMixin {
 
 
     @Redirect(
-            method = "renderCrosshair",
+            method = "extractCrosshair",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;")
     )
     private Object cancelAttackIndicatorCheck(OptionInstance instance) {
@@ -108,10 +108,10 @@ public class GuiMixin {
     }
 
     @ModifyArgs(
-            method = "renderCrosshair",
+            method = "extractCrosshair",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
+                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
             )
     )
     private void scaleAttackIndicatorFixed(Args args) {
@@ -139,10 +139,10 @@ public class GuiMixin {
         args.set(5, nh);
     }
     @ModifyArgs(
-            method = "renderCrosshair",
+            method = "extractCrosshair",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIIIIII)V"
+                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIIIIII)V"
             )
     )
     private void scaleAttackIndicatorProgress(Args args) {
@@ -178,8 +178,8 @@ public class GuiMixin {
         args.set(8, w * scale);
     }
 
-        @Inject(at = @At("HEAD"), method = "render")
-    private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        @Inject(at = @At("HEAD"), method = "extractRenderState")
+    private void onRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
