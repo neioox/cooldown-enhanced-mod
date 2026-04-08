@@ -3,6 +3,20 @@
 ## Overview
 This Fabric mod improves and extends cooldown behavior after hitting in Minecraft.
 
+## Minecraft Compatibility
+
+**Supported Minecraft versions:** 1.21.x (1.21 through 1.21.11 and beyond)
+
+This mod is compiled against Minecraft **1.21.9** as its stable baseline using Mojang's official mappings. Because the compiled bytecode targets Mojang's obfuscated class names (which remain stable across 1.21 patch releases), the same build is expected to remain compatible throughout the entire 1.21 patch line.
+
+| Component | Version |
+|-----------|---------|
+| Minecraft | `>=1.21 <1.22` |
+| Fabric Loader | `>=0.18.6` |
+| Java | `21+` |
+
+> **Note:** The mod is tested against Minecraft 1.21.9. Earlier 1.21.x patches may work via binary compatibility but are not explicitly verified. For a guaranteed-working version on a specific patch, check the dedicated `version/1.21.x` branches.
+
 ## Features
 - Enhanced cooldown mechanics for abilities and attacks.  
 - Fully customizable settings.  
@@ -16,7 +30,7 @@ This Fabric mod improves and extends cooldown behavior after hitting in Minecraf
 - Optional sound notification when the cooldown finishes.  
 
 ## Installation
-1. Download the **Fabric API** and **Fabric Loader**.  
+1. Download the **Fabric API** and **Fabric Loader** (>=0.18.6).  
 2. Install the Fabric Loader.  
 3. Download the **Cooldown Enhanced** mod.  
 4. Place the mod `.jar` file into your **mods** folder in the Minecraft directory.  
