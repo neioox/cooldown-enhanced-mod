@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm'
 }
@@ -36,12 +36,14 @@ loom {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-    implementation "com.terraformersmc:modmenu:18.0.0-alpha.8"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    modCompileOnly "com.terraformersmc:modmenu:15.0.2"
+    modRuntimeOnly "com.terraformersmc:modmenu:15.0.2"
 
-    implementation ("me.shedaniel.cloth:cloth-config-fabric:26.1.154") {
+    modApi ("me.shedaniel.cloth:cloth-config-fabric:19.0.147") {
         exclude group: 'net.fabricmc.fabric-api'
     }
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
@@ -56,7 +58,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = 21
 }
 
 java {
@@ -64,8 +66,8 @@ java {
 	// if it is present.
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 
 }
 
@@ -94,6 +96,5 @@ publishing {
 		// retrieving dependencies.
 	}
 }
-
 
 
