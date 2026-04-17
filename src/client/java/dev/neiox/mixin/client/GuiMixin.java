@@ -7,10 +7,10 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
@@ -30,21 +30,21 @@ import java.util.UUID;
 public class GuiMixin {
     @Shadow
     @Final
-    private static ResourceLocation CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE;
+    private static Identifier CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE;
     @Shadow
     @Final
-    private static ResourceLocation CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE;
+    private static Identifier CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE;
     @Shadow
     @Final
-    private static ResourceLocation CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE;
-    private static final ResourceLocation[] OVERLAY_PROGRESS_SPRITES = new ResourceLocation[]{ResourceLocation.withDefaultNamespace("boss_bar/notched_6_progress"), ResourceLocation.withDefaultNamespace("boss_bar/notched_10_progress"), ResourceLocation.withDefaultNamespace("boss_bar/notched_12_progress"), ResourceLocation.withDefaultNamespace("boss_bar/notched_20_progress")};
+    private static Identifier CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE;
+    private static final Identifier[] OVERLAY_PROGRESS_SPRITES = new Identifier[]{Identifier.withDefaultNamespace("boss_bar/notched_6_progress"), Identifier.withDefaultNamespace("boss_bar/notched_10_progress"), Identifier.withDefaultNamespace("boss_bar/notched_12_progress"), Identifier.withDefaultNamespace("boss_bar/notched_20_progress")};
     @Unique
     boolean wasOnCooldown = false;
     @Unique
     ModConfig settings = ModConfig.getInstance();
 
     @Unique
-    private void renderCooldownNumericMode(GuiGraphics guiGraphics, Minecraft minecaft, String text) {
+    private void renderCooldownNumericMode(GuiGraphicsExtractor guiGraphics, Minecraft minecaft, String text) {
         int screenWidth = minecaft.getWindow().getGuiScaledWidth();
         int screenHeight = minecaft.getWindow().getGuiScaledHeight() + 40;
 
@@ -53,11 +53,11 @@ public class GuiMixin {
 
         int x = (screenWidth - textWidth) / 2;
         int y = (screenHeight - textHeight) / 2;
-        guiGraphics.drawString(minecaft.font, text, x, y, 0xFFFFFFFF, true);
+        guiGraphics.text(minecaft.font, text, x, y, 0xFFFFFFFF, true);
     }
 
     @Unique
-    private void renderCooldownBarMode(GuiGraphics guiGraphics, Minecraft minecraft, float attackStrengthScale) {
+    private void renderCooldownBarMode(GuiGraphicsExtractor guiGraphics, Minecraft minecraft, float attackStrengthScale) {
         int scale = Math.max(1, settings.getAttackIndicatorScale());
 
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
@@ -78,7 +78,7 @@ public class GuiMixin {
 
 
     @Unique
-    private void drawBar(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, float progress, boolean modernBar) {
+    private void drawBar(GuiGraphicsExtractor guiGraphics, int x1, int y1, int x2, int y2, float progress, boolean modernBar) {
         int width = x2 - x1;
         progress = Mth.clamp(progress, 0.0F, 1.0F);
         int textureWidth = 182;
@@ -86,8 +86,8 @@ public class GuiMixin {
         int progressWidth = (int) (width * progress);
 
         if (modernBar) {
-            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, ResourceLocation.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_background"), x1, y1, width, textureHeight);
-            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, ResourceLocation.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_progress"), x1, y1, progressWidth, textureHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_background"), x1, y1, width, textureHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath("cooldown-enhanced", "hud/cooldown_progress"), x1, y1, progressWidth, textureHeight);
             return;
         }
 
@@ -97,7 +97,7 @@ public class GuiMixin {
 
 
     @Redirect(
-            method = "renderCrosshair",
+            method = "extractCrosshair",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/OptionInstance;get()Ljava/lang/Object;")
     )
     private Object cancelAttackIndicatorCheck(OptionInstance instance) {
@@ -108,14 +108,14 @@ public class GuiMixin {
     }
 
     @ModifyArgs(
-            method = "renderCrosshair",
+            method = "extractCrosshair",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIII)V"
+                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
             )
     )
     private void scaleAttackIndicatorFixed(Args args) {
-        net.minecraft.resources.ResourceLocation sprite = (net.minecraft.resources.ResourceLocation) args.get(1);
+        net.minecraft.resources.Identifier sprite = (net.minecraft.resources.Identifier) args.get(1);
 
         if (!sprite.equals(CROSSHAIR_ATTACK_INDICATOR_FULL_SPRITE)
                 && !sprite.equals(CROSSHAIR_ATTACK_INDICATOR_BACKGROUND_SPRITE)) {
@@ -139,14 +139,14 @@ public class GuiMixin {
         args.set(5, nh);
     }
     @ModifyArgs(
-            method = "renderCrosshair",
+            method = "extractCrosshair",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIIIIIII)V"
+                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIIIIII)V"
             )
     )
     private void scaleAttackIndicatorProgress(Args args) {
-        net.minecraft.resources.ResourceLocation sprite = (net.minecraft.resources.ResourceLocation) args.get(1);
+        net.minecraft.resources.Identifier sprite = (net.minecraft.resources.Identifier) args.get(1);
         if (!sprite.equals(CROSSHAIR_ATTACK_INDICATOR_PROGRESS_SPRITE)) return;
 
         int scale = Math.max(1, settings.getAttackIndicatorScale());
@@ -178,8 +178,8 @@ public class GuiMixin {
         args.set(8, w * scale);
     }
 
-        @Inject(at = @At("TAIL"), method = "renderCrosshair")
-    private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        @Inject(at = @At("HEAD"), method = "extractRenderState")
+    private void onRender(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
 
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
