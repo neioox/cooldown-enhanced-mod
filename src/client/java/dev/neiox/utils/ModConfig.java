@@ -3,7 +3,6 @@ package dev.neiox.utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.neiox.enums.settings.SettingOptions;
-import me.shedaniel.math.Color;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
